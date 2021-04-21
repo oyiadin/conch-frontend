@@ -3,37 +3,48 @@
     <div class="record-header">
       <h1 class="record-title">
         <span class="record-title-content">
-          一个基于XXX的个性化文献推荐系统的系统设计架构
+          {{ record.title }}
         </span>
         <span class="record-title-info">
           <el-tooltip placement="right">
           <template #content>
             <div class="record-title-info-popup">
-              doi:10.1000/draft<br>ECCV 2025
+              <div class="record-title-info-popup-doi" v-if="record.doi_short">
+                <a :href="record.doi">{{ record.doi_short }}</a>
+              </div>
+              <div class="record-title-info-popup-booktitle">
+                {{ record.booktitle || record.journal }} {{ record.year }}
+              </div>
             </div>
           </template>
           <i class="el-icon-warning-outline"></i>
         </el-tooltip>
         </span>
       </h1>
-      <el-space :size="10" wrap class="record-authors">
-        <div v-for="i in 5" :key="i">
-          <el-link type="primary">Jay Chou (周杰伦)</el-link>
-        </div>
-      </el-space>
-      <el-space :size="10" wrap class="record-tags">
-        <div v-for="i in 5" :key="i" class="record-tag-item">
-          <el-link>
-            <i class="el-icon-collection-tag"></i>
-            <span style="margin-left: 0">个性化推荐</span>
-          </el-link>
-        </div>
-        <div class="record-tag-item record-tags-more">
-          <el-link>
-            <span>更多 (4+)</span>
-          </el-link>
-        </div>
-      </el-space>
+      <div class="record-authors">
+        <el-space :size="10" wrap class="record-authors">
+          <div v-for="author in record.authors" :key="author.name">
+            <el-link type="primary">
+              {{ author.name }}
+            </el-link>
+          </div>
+        </el-space>
+      </div>
+      <div class="record-tags">
+        <el-space :size="10" wrap class="record-tags">
+          <div v-for="i in 5" :key="i" class="record-tag-item">
+            <el-link>
+              <i class="el-icon-collection-tag"></i>
+              <span style="margin-left: 0">个性化推荐</span>
+            </el-link>
+          </div>
+          <div class="record-tag-item record-tags-more">
+            <el-link>
+              <span>更多 (4+)</span>
+            </el-link>
+          </div>
+        </el-space>
+      </div>
     </div>
     <div class="record-main">
       <div class="record-section">
@@ -48,15 +59,30 @@
 </template>
 
 <script>
-import {h} from "vue";
-import {ElDivider} from "element-plus";
+import axios from "axios";
 
 export default {
   name: 'App',
   components: {},
   data() {
     return {
-      spacer: h(ElDivider, { direction: 'vertical' }),
+      record: {
+        title: '载入中..'
+      }
+    }
+  },
+  mounted() {
+    this.loadData()
+  },
+  methods: {
+    loadData() {
+      axios.get('/api/records/dblp_key/series/sapere/Freed13')
+      .then((res) => {
+        if (res.data.doi) {
+          res.data.doi_short = res.data.doi.replace(/^(https?:\/\/doi\.org\/)/, "")
+        }
+        this.record = res.data
+      })
     }
   }
 }
@@ -95,6 +121,10 @@ span.record-title-info i:hover {
 div.record-title-info-popup {
   line-height: 1.6em;
   padding: 0 4px;
+}
+.record-title-info-popup * {
+  color: white;
+  font-style: italic;
 }
 .record-authors .el-button--text {
   min-height: 1em;

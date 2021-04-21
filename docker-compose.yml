@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  frontend:
+    build: .
+    networks:
+      - conch_default
+    labels:
+      - traefik.http.routers.frontend.rule=Host(`conch.localhost`)
+
+networks:
+  conch_default:
+    external: true
