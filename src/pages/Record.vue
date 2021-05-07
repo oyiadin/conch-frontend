@@ -9,11 +9,11 @@
           <el-tooltip placement="right">
           <template #content>
             <div class="record-title-info-popup">
-              <div class="record-title-info-popup-doi" v-if="record.doi_short">
-                <a :href="record.doi">{{ record.doi_short }}</a>
+              <div class="record-title-info-popup-doi" v-if="record.doi">
+                <a :href="'https://doi.org/' + record.doi">doi:{{ record.doi }}</a>
               </div>
               <div class="record-title-info-popup-booktitle">
-                {{ record.booktitle || record.journal }} {{ record.year }}
+                {{ record.journalName }} {{ record.year }}
               </div>
             </div>
           </template>
@@ -50,7 +50,7 @@
       <div class="record-section">
         <h2 class="record-section-header">摘要</h2>
         <div class="record-section-content">
-          本课题旨在…… <a href="#">点击展开</a>
+          {{ record.paperAbstract }}
         </div>
       </div>
     </div>
@@ -83,11 +83,8 @@ export default {
   },
   methods: {
     loadData() {
-      axios.get(`/api/records/dblp_key/${this.$route.params.key}`)
+      axios.get(`/api/record/${this.$route.params.key}`)
           .then((res) => {
-            if (res.data.doi) {
-              res.data.doi_short = res.data.doi.replace(/^(https?:\/\/doi\.org\/)/, "")
-            }
             this.record = res.data
             this.empty = false
           })
