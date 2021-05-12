@@ -12,7 +12,7 @@ import User from "@/pages/User";
 
 
 const routes = [
-    { path: '/', redirect: { name: 'search' }},
+    { name: 'root', path: '/', redirect: { name: 'search' }},
     { name: 'record', path: '/record/:key(.+)', component: Record },
     { name: 'person', path: '/person/:key(.+)', component: Person },
     { name: 'search', path: '/search', component: Search },

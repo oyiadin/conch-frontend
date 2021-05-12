@@ -3,8 +3,8 @@
     <el-affix id="navbar">
       <div id="navbar-inner">
         <div id="navbar-left">
-          <router-link to="/" custom v-slot="{ navigate, href }">
-            <el-link type="text" :href="href" @click="navigate">
+          <router-link :to="{ name: 'root' }" custom v-slot="{ navigate, href }">
+            <el-link :href="href" @click="navigate">
               个性化论文推荐平台
             </el-link>
           </router-link>
