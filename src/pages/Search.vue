@@ -114,9 +114,6 @@ export default {
 .record-authors a:last-child:after {
   content: '';
 }
-.record-authors a:hover {
-  text-decoration: underline;
-}
 .record-metadata span:after {
   content: '; ';
 }

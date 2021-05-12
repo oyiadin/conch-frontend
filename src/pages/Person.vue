@@ -57,7 +57,7 @@
                 </div>
               </div>
               <div v-else>
-                <el-skeleton :rows="4" animated />
+                <el-skeleton :rows="1" animated />
               </div>
             </li>
           </ul>

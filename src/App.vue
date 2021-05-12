@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-affix id="navbar">
+    <div id="navbar">
       <div id="navbar-inner">
         <div id="navbar-left">
           <router-link :to="{ name: 'root' }" custom v-slot="{ navigate, href }">
@@ -21,7 +21,7 @@
           </template>
         </div>
       </div>
-    </el-affix>
+    </div>
     <div id="outer-container">
       <router-view></router-view>
     </div>
