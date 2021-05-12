@@ -3,52 +3,64 @@
     <div class="person-header">
       <h1 class="person-names">
         <span class="person-names-main">
-          {{ person.names[0] }}
-        </span>
-        <span class="person-names-uname" v-if="person.uname">
-          ({{ person.uname }})
+          {{ person.name }}
         </span>
       </h1>
-      <div class="person-names-remains" v-if="person.names.length > 1">
-        <el-space :size="10" wrap>
-          <div v-for="name in person.names.slice(1)" :key="name">
-            {{ name }}
-          </div>
-        </el-space>
-      </div>
     </div>
     <div class="person-main">
-      <div class="person-section" v-if="person.affiliations && person.affiliations.length">
-        <h2 class="person-section-header">所属机构</h2>
-        <div class="person-section-content">
-          <el-timeline>
-            <el-timeline-item
-                v-for="(affiliation, index) in person.affiliations"
-                :key="index"
-                :timestamp="affiliation.label">
-              {{ affiliation.text }}
-            </el-timeline-item>
-          </el-timeline>
-        </div>
-      </div>
       <div class="person-section">
-        <h2 class="person-section-header">个人主页</h2>
+        <h2 class="person-section-header">发表文献</h2>
         <div class="person-section-content">
-          <el-timeline>
-            <el-timeline-item timestamp="DBLP 个人主页">
-              <el-link
-                  :href="person.dblp_homepage"
-                  target="_blank">{{ person.dblp_homepage }}</el-link>
-            </el-timeline-item>
-            <el-timeline-item
-                v-for="(url, index) in person.urls"
-                :key="index"
-                :timestamp="url.type">
-              <el-link
-                  :href="url.text"
-                  target="_blank">{{ url.text }}</el-link>
-            </el-timeline-item>
-          </el-timeline>
+          <ul class="query-results">
+            <li v-for="paperId in person.papers" :key="paperId">
+              <div v-if="papers[paperId]">
+                <div class="record-title">
+                  <router-link :to="{ name: 'record', params: {key: papers[paperId]._id}}">
+                    {{ papers[paperId].title }}
+                  </router-link>
+                </div>
+                <div class="record-authors">
+                  <span v-for="author in papers[paperId].authors" :key="author.name">
+                    <router-link :to="{ name: 'person', params: {key: author.ids[0]}}"
+                                 custom v-slot="{ navigate, href }">
+                      <el-link :href="href" @click="navigate" :underline="false"
+                               :disabled="author.ids[0] === $route.params.key">
+                        <i v-if="author.ids[0] === $route.params.key">
+                          {{ author.name }}
+                        </i>
+                        <template v-else>
+                          {{ author.name }}
+                        </template>
+                      </el-link>
+                    </router-link>
+                  </span>
+                </div>
+                <div class="record-abstract">
+                  {{ papers[paperId].shortAbstract }}
+                </div>
+                <div class="record-metadata">
+                  <span v-if="papers[paperId].doi">
+                    <el-link href="https://doi.org/{{ papers[paperId].doi }}" target="_blank">
+                      doi:{{ papers[paperId].doi }}
+                    </el-link>
+                  </span>
+                  <span v-for="field in papers[paperId].fieldsOfStudy" :key="field">
+                    <i>{{ field }}</i>
+                  </span>
+                  <span class="record-journal-name" v-if="papers[paperId].journalName">
+                    <strong>Journal: </strong>
+                    {{ papers[paperId].journalName }}
+                  </span>
+                  <span class="record-year" v-if="papers[paperId].year">
+                    {{ papers[paperId].year }}
+                  </span>
+                </div>
+              </div>
+              <div v-else>
+                <el-skeleton :rows="4" animated />
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -68,34 +80,83 @@ export default {
   data() {
     return {
       person: {},
+      papers: {},
       empty: true,
     }
   },
   mounted() {
     this.loadData()
   },
-  watch: {
-    '$route.params'() {
-      this.loadData()
-    }
+  beforeRouteUpdate(to, from, next) {
+    this.loadData(to)
+    next()
   },
   methods: {
-    loadData() {
-      axios.get(`/api/authors/datafeeder_key/${this.$route.params.key}`)
-          .then((res) => {
+    async loadData(route) {
+      if (!route)
+        route = this.$route
+      axios.get(`/api/author/${route.params.key}`)
+          .then(async (res) => {
             this.person = res.data
+            for (let paperId of res.data.papers) {
+              try {
+                const resp = await axios({
+                  url: `/api/record/${paperId}`,
+                  method: 'GET',
+                  params: {no_record_history: true}
+                })
+                this.papers[paperId] = resp.data
+              } catch (err) {
+                console.error(err)
+              }
+            }
             this.empty = false
           })
           .catch((reason) => {
             ElMessage.error("载入失败：" + reason)
             this.empty = true
           })
-
     }
   }
 }
 </script>
 
-<style>
-
+<style scoped>
+.query-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.query-results li {
+  margin-bottom: 20px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid black;
+}
+.query-results li:hover {
+  background-color: #f0f0f0;
+}
+.query-results li * {
+  color: #2c3e50 !important;
+}
+.query-results li a {
+  text-decoration: none;
+}
+.record-title {
+  font-weight: bold;
+}
+.record-authors > span:after {
+  content: ', ';
+}
+.record-authors > span:last-child:after {
+  content: '';
+}
+.record-authors > span:hover {
+  text-decoration: underline;
+}
+.record-metadata span:after {
+  content: '; ';
+}
+.record-metadata span:last-child:after {
+  content: '';
+}
 </style>

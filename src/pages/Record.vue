@@ -24,7 +24,7 @@
       <div class="record-authors">
         <el-space :size="10" wrap class="record-authors">
           <div v-for="author in record.authors" :key="author.name">
-            <router-link :to="{ name: 'person', params: {key: author.name}}">
+            <router-link :to="{ name: 'person', params: {key: author.ids[0]}}">
               {{ author.name }}
             </router-link>
           </div>
@@ -76,14 +76,15 @@ export default {
   mounted() {
     this.loadData()
   },
-  watch: {
-    '$route.params'() {
-      this.loadData()
-    }
+  beforeRouteUpdate(to, from, next) {
+    this.loadData(to)
+    next()
   },
   methods: {
-    loadData() {
-      axios.get(`/api/record/${this.$route.params.key}`)
+    loadData(route) {
+      if (!route)
+        route = this.$route
+      axios.get(`/api/record/${route.params.key}`)
           .then((res) => {
             this.record = res.data
             this.empty = false
