@@ -47,7 +47,7 @@
       </div>
     </div>
     <div class="record-main">
-      <div class="record-section">
+      <div class="record-section" v-if="record.paperAbstract">
         <h2 class="record-section-header">摘要</h2>
         <div class="record-section-content">
           {{ record.paperAbstract }}
@@ -246,6 +246,10 @@ export default {
               if (this.loadedPapersCount === 0)
                 this.recommendIdsLoadFailed = true
             }, 60000)
+          })
+          .catch((reason) => {
+            this.recommendIdsLoadFailed = true
+            ElMessage.error("载入失败：" + reason)
           })
     }
   }
