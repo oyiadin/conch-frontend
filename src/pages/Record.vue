@@ -56,65 +56,70 @@
       <div class="record-section">
         <h2 class="record-section-header">相似论文</h2>
         <div class="record-section-content" v-loading="loadingRecommendIds">
-          <ul class="query-results">
-            <li v-for="index in ((remainCount < 10) ? remainCount : 10)"
-                :key="index + (currentPage - 1) * 10">
-              <template v-for="record in [papers[recommendIds[index - 1 + (currentPage - 1) * 10]]]" :key="record">
-                <div v-if="record">
-                  <div class="record-title">
-                    <router-link :to="{ name: 'record', params: {key: record._id}}">
-                      {{ record.title }}
-                    </router-link>
-                  </div>
-                  <div class="record-authors">
-                    <span v-for="author in record.authors" :key="author.name">
-                      <router-link :to="{ name: 'person', params: {key: author.ids[0]}}"
-                                   custom v-slot="{ navigate, href }"
-                      >
-                        <el-link :href="href" @click="navigate">
-                          {{ author.name }}
-                        </el-link>
+          <div v-if="!recommendIdsLoadFailed">
+            <ul class="query-results">
+              <li v-for="index in ((remainCount < 10) ? remainCount : 10)"
+                  :key="index + (currentPage - 1) * 10">
+                <template v-for="record in [papers[recommendIds[index - 1 + (currentPage - 1) * 10]]]" :key="record">
+                  <div v-if="record">
+                    <div class="record-title">
+                      <router-link :to="{ name: 'record', params: {key: record._id}}">
+                        {{ record.title }}
                       </router-link>
-                    </span>
+                    </div>
+                    <div class="record-authors">
+                      <span v-for="author in record.authors" :key="author.name">
+                        <router-link :to="{ name: 'person', params: {key: author.ids[0]}}"
+                                     custom v-slot="{ navigate, href }"
+                        >
+                          <el-link :href="href" @click="navigate">
+                            {{ author.name }}
+                          </el-link>
+                        </router-link>
+                      </span>
+                    </div>
+                    <div class="record-abstract" v-if="record.shortAbstract">
+                      <i>ABSTRACT</i> | {{ record.shortAbstract }}
+                    </div>
+                    <div class="record-metadata">
+                      <span v-if="record.doi">
+                        <el-link :href="'https://doi.org/' + record.doi" target="_blank">
+                          doi:{{ record.doi }}
+                        </el-link>
+                      </span>
+                      <span v-for="field in record.fieldsOfStudy" :key="field">
+                        <i>{{ field }}</i>
+                      </span>
+                      <span class="record-journal-name" v-if="record.journalName">
+                        <strong>Journal: </strong>
+                        {{ record.journalName }}
+                      </span>
+                      <span class="record-year" v-if="record.year">
+                        {{ record.year }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="record-abstract" v-if="record.shortAbstract">
-                    <i>ABSTRACT</i> | {{ record.shortAbstract }}
+                  <div v-else>
+                    <el-skeleton animated>
+                      <template #template>
+                        <el-skeleton-item variant="text" />
+                      </template>
+                    </el-skeleton>
                   </div>
-                  <div class="record-metadata">
-                    <span v-if="record.doi">
-                      <el-link :href="'https://doi.org/' + record.doi" target="_blank">
-                        doi:{{ record.doi }}
-                      </el-link>
-                    </span>
-                        <span v-for="field in record.fieldsOfStudy" :key="field">
-                      <i>{{ field }}</i>
-                    </span>
-                        <span class="record-journal-name" v-if="record.journalName">
-                      <strong>Journal: </strong>
-                      {{ record.journalName }}
-                    </span>
-                        <span class="record-year" v-if="record.year">
-                      {{ record.year }}
-                    </span>
-                  </div>
-                </div>
-                <div v-else>
-                  <el-skeleton animated>
-                    <template #template>
-                      <el-skeleton-item variant="text" />
-                    </template>
-                  </el-skeleton>
-                </div>
-              </template>
-            </li>
-          </ul>
-          <el-pagination
-              v-loading="loadingRecommendIds"
-              v-model:currentPage="currentPage"
-              :page-size="10"
-              layout="prev, pager, next"
-              :total="recommendIds.length">
-          </el-pagination>
+                </template>
+              </li>
+            </ul>
+            <el-pagination
+                v-loading="loadingRecommendIds"
+                v-model:currentPage="currentPage"
+                :page-size="10"
+                layout="prev, pager, next"
+                :total="recommendIds.length">
+            </el-pagination>
+          </div>
+          <div v-else>
+            <el-empty description="相似论文载入失败"></el-empty>
+          </div>
         </div>
       </div>
     </div>
@@ -136,6 +141,7 @@ export default {
       record: {},
       empty: true,
       loadingRecommendIds: true,
+      recommendIdsLoadFailed: false,
       recommendIds: [],
       papers: {},
       loadedPapersCount: 0,
@@ -158,15 +164,26 @@ export default {
   },
   methods: {
     loadData(route) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      this.record = {}
+      this.loadingRecommendIds = true
+      this.recommendIdsLoadFailed = false
+      this.recommendIds = []
+      this.papers = {}
+      this.loadedPapersCount = 0
+      this.currentPage = 1
       if (this.checkRecommendResultTimeoutId)
         clearTimeout(this.checkRecommendResultTimeoutId)
       this.checkRecommendResultTimeoutId = null
+      if (this.checkRecommendResultIntervalId)
+        clearTimeout(this.checkRecommendResultIntervalId)
+      this.checkRecommendResultIntervalId = null
       if (!route)
         route = this.$route
-      this.loadingRecommendIds = true
       axios.get(`/api/record/${route.params.key}`)
           .then((res) => {
             this.record = res.data
+            document.title = `${res.data.title} - 个性化文献推荐系统`
             this.empty = false
             this.loadRecommendIds()
           })
@@ -226,6 +243,8 @@ export default {
               this.checkRecommendResultIntervalId = null
               if (this.loadedPapersCount !== this.recommendIds.length)
                 ElMessage.error("载入失败：超时")
+              if (this.loadedPapersCount === 0)
+                this.recommendIdsLoadFailed = true
             }, 60000)
           })
     }

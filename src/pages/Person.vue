@@ -93,11 +93,16 @@ export default {
   },
   methods: {
     async loadData(route) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      this.person = {}
+      this.papers = {}
+      // this.empty = true
       if (!route)
         route = this.$route
       axios.get(`/api/author/${route.params.key}`)
           .then(async (res) => {
             this.person = res.data
+            document.title = `${res.data.name} - 个性化文献推荐系统`
             for (let paperId of res.data.papers) {
               try {
                 const resp = await axios({

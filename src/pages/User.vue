@@ -79,6 +79,9 @@ import {ElMessage} from "element-plus";
 
 export default {
   name: "User.vue",
+  created () {
+    document.title = '用户中心 - 个性化文献推荐系统'
+  },
   data () {
     return {
       mode: 'login',
@@ -110,7 +113,7 @@ export default {
         }
       })
           .then(() => {
-            this.$router.push({ name: 'root' })
+            window.location.href = '/'
           })
           .catch((reason) => {
             ElMessage.error("登录失败：" + reason)
@@ -127,7 +130,7 @@ export default {
         }
       })
           .then(() => {
-            this.$router.push({ name: 'root' })
+            window.location.href = '/'
           })
           .catch((reason) => {
             ElMessage.error("注册失败：" + reason)

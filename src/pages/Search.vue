@@ -53,6 +53,7 @@ export default {
     }
   },
   created () {
+    document.title = '搜索 - 个性化文献推荐系统'
     this.debouncedGetQueryResults = debounce(this.getQueryResults, 1000)
   },
   watch: {
