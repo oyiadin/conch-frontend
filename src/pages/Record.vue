@@ -238,6 +238,7 @@ export default {
             }
             this.checkRecommendResultIntervalId = setInterval(checkResult, 1000)
             this.checkRecommendResultTimeoutId = setTimeout(() => {
+              this.loadingRecommendIds = false
               if (this.checkRecommendResultIntervalId)
                 clearInterval(this.checkRecommendResultIntervalId)
               this.checkRecommendResultIntervalId = null
@@ -249,6 +250,7 @@ export default {
           })
           .catch((reason) => {
             this.recommendIdsLoadFailed = true
+            this.loadingRecommendIds = false
             ElMessage.error("载入失败：" + reason)
           })
     }
